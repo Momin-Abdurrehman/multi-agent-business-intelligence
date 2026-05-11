@@ -28,6 +28,29 @@ def test_clarity_output_clarification_question_defaults_empty():
     assert obj.clarification_question == ""
 
 
+def test_clarity_output_company_name_defaults_empty():
+    obj = ClarityOutput(clarity_status="clear", reason="Apple named")
+    assert obj.company_name == ""
+
+
+def test_clarity_output_accepts_company_name():
+    obj = ClarityOutput(
+        clarity_status="clear",
+        reason="Follow-up about Apple",
+        company_name="Apple",
+    )
+    assert obj.company_name == "Apple"
+
+
+def test_clarity_output_company_name_resolved_from_history():
+    obj = ClarityOutput(
+        clarity_status="clear",
+        reason="Follow-up pronoun resolved to Tesla from history",
+        company_name="Tesla",
+    )
+    assert obj.company_name == "Tesla"
+
+
 def test_clarity_output_accepts_clarification_question():
     obj = ClarityOutput(
         clarity_status="needs_clarification",

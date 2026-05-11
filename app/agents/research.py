@@ -63,25 +63,66 @@ that locks in weak findings.
 200–400 words. Specific and factual. No padding with general industry context."""
 
 _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.2).with_structured_output(ResearchOutput)
+_query_llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0)
+
+
+def _build_search_query(
+    query: str,
+    messages: list,
+    attempt: int = 1,
+    prior_findings: str = "",
+) -> str:
+    """Generate a self-contained Tavily search query from conversation context.
+
+    On retries, instructs the LLM to use a different search angle so each
+    attempt brings genuinely new information rather than repeating the same query.
+    """
+    history = "\n".join(f"{m.type.upper()}: {m.content}" for m in messages[-4:])
+    retry_note = ""
+    if attempt > 1 and prior_findings:
+        retry_note = (
+            f"\n\nPrevious attempt found: {prior_findings[:400]}\n"
+            "Generate a DIFFERENT search query — vary the keywords or try a related angle."
+        )
+    prompt = (
+        f"Conversation:\n{history}\n\n"
+        f"User query: {query}{retry_note}\n\n"
+        "Write a single web search query (8 words max) to find this information.\n"
+        "Rules:\n"
+        "- Include the company name even if the user used pronouns or ellipsis\n"
+        "- Resolve the company from conversation history if not stated in the query\n"
+        "- Add '2025' for news, financials, earnings, or time-sensitive topics\n"
+        "- Return ONLY the search query — no explanation, no quotes"
+    )
+    try:
+        result = _query_llm.invoke([HumanMessage(content=prompt)])
+        return result.content.strip().strip('"').strip("'")
+    except Exception:
+        return query  # safe fallback
 
 
 def research_agent(state: ResearchState, tools: list[BaseTool]) -> dict:
     """Search for company data and synthesise findings with a confidence score."""
-    # Find the search tool (works with both MCP and direct SDK fallback)
     search_tool: BaseTool | None = next(
         (t for t in tools if "search" in t.name.lower()), None
     )
 
     query = state["current_query"]
     attempts = state.get("research_attempts", 0) + 1
+    prior_findings = state.get("research_findings") or ""
 
-    # --- Run the search --------------------------------------------------
-    search_text = _run_search(search_tool, query)
+    # --- Generate a self-contained, context-aware search query ---------------
+    search_query = _build_search_query(
+        query, state["messages"], attempt=attempts, prior_findings=prior_findings
+    )
+
+    # --- Run the search ------------------------------------------------------
+    search_text = _run_search(search_tool, search_query)
 
     # Include prior findings on retry so the LLM can fill gaps
     prior_section = ""
-    if state.get("research_findings"):
-        prior_section = f"\n\nPrevious research attempt (attempt {attempts - 1}):\n{state['research_findings']}"
+    if prior_findings:
+        prior_section = f"\n\nPrevious research attempt (attempt {attempts - 1}):\n{prior_findings}"
 
     prompt = (
         f"Research query: {query}\n\n"

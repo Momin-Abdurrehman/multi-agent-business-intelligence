@@ -26,7 +26,8 @@ class ResearchState(TypedDict):
     """
 
     messages: Annotated[list, add_messages]
-    current_query: str
+    current_query: str            # search query (may be reformulated from original)
+    company_name: str             # canonical display name, e.g. "Apple" (set by clarity agent)
     clarity_status: str           # "clear" | "needs_clarification"
     research_findings: Optional[str]
     confidence_score: float       # 0–10
@@ -44,6 +45,15 @@ class ClarityOutput(BaseModel):
 
     clarity_status: Literal["clear", "needs_clarification"]
     reason: str = Field(description="Brief explanation of the clarity decision")
+    company_name: str = Field(
+        default="",
+        description=(
+            "The canonical display name of the company or person being researched "
+            "(e.g. 'Apple', 'Tesla', 'Elon Musk'). "
+            "Resolved from conversation history for follow-up queries. "
+            "Empty when clarity_status is needs_clarification."
+        ),
+    )
     clarification_question: str = Field(
         default="",
         description=(

@@ -70,8 +70,9 @@ def synthesis_agent(state: ResearchState) -> dict:
         "Answer the current query directly and concisely."
     )
 
-    # Fill the {company} placeholder so the model never outputs it literally
-    system = _SYSTEM_PROMPT.replace("{company}", state["current_query"])
+    # Use company_name for the display label; fall back to current_query if unset
+    display_name = state.get("company_name") or state["current_query"]
+    system = _SYSTEM_PROMPT.replace("{company}", display_name)
 
     response = _llm.invoke(
         [SystemMessage(content=system), HumanMessage(content=prompt)]

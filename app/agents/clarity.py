@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0).with_structured_output(ClarityOutput)
 
-_SYSTEM_PROMPT = """You are the Clarity Agent in a business research pipeline. Your only \
-job is to decide whether the user's request identifies a specific company or named entity \
-that can be researched.
+_SYSTEM_PROMPT = """You are the Clarity Agent in a business research pipeline. Your job \
+is to decide whether the user's request identifies a specific company or named entity \
+that can be researched, and to extract the canonical company name.
 
 ## Process — follow these steps in order
 
@@ -27,19 +27,23 @@ that can be researched.
 2. Ask: does the current query name a specific company, brand, startup, or person?
 3. Ask: if not, does it refer to one already named earlier in the conversation?
 4. Apply the rules below and give your decision.
+5. Always fill company_name with the canonical name of the entity being researched.
 
 ## Mark CLEAR when:
 - A specific company, brand, startup, or organisation is named — even if you have never
   heard of it. Unfamiliar or obscure names are valid targets.
-  ✓ "Tell me about Apple"
-  ✓ "What is Riverstone Holdings?"
-  ✓ "Explain Merchaint's business model"
-- The query is a follow-up using pronouns (they/their/it/its) and a company was already
-  named earlier in the conversation.
-  ✓ "What about their CEO?" — after discussing Microsoft
-  ✓ "Is it profitable?" — after discussing Tesla
+  ✓ "Tell me about Apple" → company_name: "Apple"
+  ✓ "What is Riverstone Holdings?" → company_name: "Riverstone Holdings"
+  ✓ "Explain Merchaint's business model" → company_name: "Merchaint"
+- The query is a follow-up and a company was already named earlier in the conversation.
+  Resolve the company from history and set company_name accordingly.
+  ✓ "What about their CEO?" after Microsoft discussion → company_name: "Microsoft"
+  ✓ "Is it profitable?" after Tesla discussion → company_name: "Tesla"
+  ✓ "financials?" after Apple discussion → company_name: "Apple"
+  ✓ "any news?" after Amazon discussion → company_name: "Amazon"
+  ✓ "what happened last quarter?" after Google discussion → company_name: "Google"
 - The query names a person rather than a company — research the person.
-  ✓ "Tell me about Elon Musk"
+  ✓ "Tell me about Elon Musk" → company_name: "Elon Musk"
 
 ## Mark NEEDS_CLARIFICATION (ambiguous name) when:
 - The name in the query is a common word or short name that refers to multiple distinct,
@@ -88,9 +92,10 @@ def clarity_agent(state: ResearchState) -> dict:
         )
         return {
             "clarity_status": result.clarity_status,
+            "company_name": result.company_name,
             "clarification_question": result.clarification_question,
         }
     except Exception as exc:
         # Fail safe: assume clear so a parsing error doesn't block an obvious query
         logger.warning("Clarity agent error: %s — defaulting to clear.", exc)
-        return {"clarity_status": "clear", "clarification_question": ""}
+        return {"clarity_status": "clear", "company_name": "", "clarification_question": ""}

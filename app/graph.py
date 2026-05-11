@@ -108,7 +108,7 @@ def route_validation(state: ResearchState) -> str:
 # ── Graph factory ──────────────────────────────────────────────────────────────
 
 
-def build_graph(tools: list[BaseTool]) -> Any:
+def build_graph(tools: list[BaseTool], checkpointer=None) -> Any:
     """
     Build and compile the multi-agent research graph.
 
@@ -141,7 +141,6 @@ def build_graph(tools: list[BaseTool]) -> Any:
     builder.add_edge("set_low_confidence", "synthesis_agent")
     builder.add_edge("synthesis_agent", END)
 
-    # MemorySaver enables interrupt support and cross-turn message accumulation.
-    # Replace with SqliteSaver(conn) for persistent cross-session memory.
-    checkpointer = MemorySaver()
-    return builder.compile(checkpointer=checkpointer)
+    # Caller provides an async-compatible checkpointer (AsyncSqliteSaver in production).
+    # Falls back to MemorySaver when none is supplied (tests, local dev without DB).
+    return builder.compile(checkpointer=checkpointer or MemorySaver())

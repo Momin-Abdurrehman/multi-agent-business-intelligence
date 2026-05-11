@@ -1,7 +1,22 @@
+# Environment
 .env
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 dist/
 *.egg-info/
-.chainlit/
+
+# Database
+conversations.db
+conversations.db-shm
+conversations.db-wal
+
+# Test cache
+.pytest_cache/
+
+# Editor / tooling
+.claude/
+.files/
