@@ -50,10 +50,10 @@ def human_clarification_node(state: ResearchState) -> dict:
     returns control to the caller. Execution resumes when the caller
     invokes the graph with Command(resume=<user_reply>).
     """
-    clarification = interrupt(
-        "I need a bit more detail to help you. "
-        "Which specific company are you asking about?"
+    question = state.get("clarification_question") or (
+        "I need a bit more detail. Which specific company are you asking about?"
     )
+    clarification = interrupt(question)
     return {"current_query": clarification}
 
 

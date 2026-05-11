@@ -104,6 +104,7 @@ async def on_message(message: cl.Message) -> None:
             "validation_result": None,
             "research_attempts": 0,
             "low_confidence": False,
+            "clarification_question": "",
         }
 
     # ── Pass 1: run the graph, collect trace + buffer synthesis tokens ─────

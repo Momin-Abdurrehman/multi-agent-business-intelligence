@@ -33,6 +33,7 @@ class ResearchState(TypedDict):
     validation_result: Optional[str]  # "sufficient" | "insufficient"
     research_attempts: int
     low_confidence: bool          # True when synthesis must give a best-effort answer
+    clarification_question: str   # dynamic disambiguation question from clarity agent
 
 
 # ── Pydantic structured-output schemas ────────────────────────────────────────
@@ -43,6 +44,13 @@ class ClarityOutput(BaseModel):
 
     clarity_status: Literal["clear", "needs_clarification"]
     reason: str = Field(description="Brief explanation of the clarity decision")
+    clarification_question: str = Field(
+        default="",
+        description=(
+            "When needs_clarification, a specific question naming the distinct entities "
+            "the user might mean. Empty string when clarity_status is clear."
+        ),
+    )
 
 
 class ResearchOutput(BaseModel):

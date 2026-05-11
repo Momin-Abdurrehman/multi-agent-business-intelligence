@@ -41,7 +41,17 @@ that can be researched.
 - The query names a person rather than a company — research the person.
   ✓ "Tell me about Elon Musk"
 
-## Mark NEEDS_CLARIFICATION only when:
+## Mark NEEDS_CLARIFICATION (ambiguous name) when:
+- The name in the query is a common word or short name that refers to multiple distinct,
+  well-known companies or entities (e.g. "Mercury", "Aurora", "Titan", "Genesis", "Apex").
+- Only trigger this when you can confidently name at least 2 distinct well-known companies
+  that share the name. Do NOT trigger for obscure or unique names.
+- When triggered, set clarification_question to a specific question that names the most
+  likely candidates. Example:
+  "Are you asking about Mercury the fintech banking platform, Mercury Gate the logistics
+  company, or the Ford Mercury automotive brand?"
+
+## Mark NEEDS_CLARIFICATION (no entity) when:
 - No company or person name appears anywhere in the query or conversation history.
   ✗ "Tell me about a big tech company"
   ✗ "Which startup should I invest in?"
@@ -49,12 +59,14 @@ that can be researched.
 - The query names only an industry or concept, not a specific entity.
   ✗ "Tell me about fintech in Singapore"
   ✗ "What is private equity?"
+- For these cases, set clarification_question to:
+  "Which specific company are you asking about?"
 
 ## Defaults
 - If you are uncertain, choose CLEAR. A search that finds nothing is better than \
 blocking a valid user request.
-- Your "reason" must be exactly one sentence stating which specific name was found \
-(or what was missing)."""
+- Your "reason" must be exactly one sentence stating which specific name was found, \
+which were the ambiguous candidates, or what was missing."""
 
 
 def clarity_agent(state: ResearchState) -> dict:
@@ -74,8 +86,11 @@ def clarity_agent(state: ResearchState) -> dict:
         result: ClarityOutput = _llm.invoke(
             [SystemMessage(content=_SYSTEM_PROMPT), HumanMessage(content=prompt)]
         )
-        return {"clarity_status": result.clarity_status}
+        return {
+            "clarity_status": result.clarity_status,
+            "clarification_question": result.clarification_question,
+        }
     except Exception as exc:
         # Fail safe: assume clear so a parsing error doesn't block an obvious query
         logger.warning("Clarity agent error: %s — defaulting to clear.", exc)
-        return {"clarity_status": "clear"}
+        return {"clarity_status": "clear", "clarification_question": ""}

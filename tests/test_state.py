@@ -23,6 +23,20 @@ def test_clarity_output_accepts_needs_clarification():
     assert obj.clarity_status == "needs_clarification"
 
 
+def test_clarity_output_clarification_question_defaults_empty():
+    obj = ClarityOutput(clarity_status="clear", reason="Apple named")
+    assert obj.clarification_question == ""
+
+
+def test_clarity_output_accepts_clarification_question():
+    obj = ClarityOutput(
+        clarity_status="needs_clarification",
+        reason="Ambiguous name",
+        clarification_question="Are you asking about Mercury the fintech or the logistics company?",
+    )
+    assert "Mercury" in obj.clarification_question
+
+
 def test_clarity_output_rejects_invalid_status():
     with pytest.raises(ValidationError):
         ClarityOutput(clarity_status="maybe", reason="x")

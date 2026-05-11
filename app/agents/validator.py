@@ -38,6 +38,9 @@ another search attempt should be made.
 ## Mark INSUFFICIENT when:
 - The findings discuss a generic concept or unrelated companies instead of the queried entity
   ✗ Explaining what "merchants" are when asked about a company called "Merchaint"
+- The findings are about a non-company entity (planet, element, historical figure) when the
+  query was about a company — even if the name matches
+  ✗ Facts about the planet Mercury when the query was about "Mercury" as a company
 - The findings contain no specific facts about the entity AND confidence_score is below 4
 - The Research Agent explicitly stated no relevant results were found
 
