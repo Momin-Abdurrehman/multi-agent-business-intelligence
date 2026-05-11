@@ -1,0 +1,28 @@
+[project]
+name = "business-research-assistant"
+version = "0.1.0"
+description = "Multi-agent business research assistant powered by LangGraph, Groq, and Tavily"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2.50",
+    "langchain>=0.3.0",
+    "langchain-groq>=0.2.0",
+    "langchain-google-genai>=2.0.0",
+    "langchain-mcp-adapters>=0.1.0",
+    "langchain-community>=0.3.0",
+    "chainlit>=2.0.0",
+    "pydantic>=2.0.0",
+    "langsmith>=0.1.0",
+    "python-dotenv>=1.0.0",
+    "tavily-python>=0.5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
