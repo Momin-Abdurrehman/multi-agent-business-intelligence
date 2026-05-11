@@ -28,6 +28,11 @@ Write ONLY about the entity named in the query. If the search results discuss a 
 company, a generic concept, or industry trends without mentioning the queried entity \
 directly — do not include that content.
 
+## Exception: comparison queries
+If the query explicitly compares two or more companies (e.g. "how does X compare to Y", \
+"X vs Y revenue"), include data for ALL named companies. Filtering out the comparison \
+company makes the answer useless.
+
 ## Report structure
 Include only sections for which you have real data. Omit any section entirely if you \
 have nothing specific to say — do not write "data not available" under a heading.
